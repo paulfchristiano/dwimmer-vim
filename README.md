@@ -18,13 +18,13 @@ This is most likely to work for files in the dwimmer-py repository.
 Use your plugin manager of choice.
 
 - [Pathogen](https://github.com/tpope/vim-pathogen)
-  - `git clone https://github.com/paulfchristiano/dwimmer ~/.vim/bundle/dwimmer`
+  - `git clone https://github.com/paulfchristiano/dwimmer-vim ~/.vim/bundle/dwimmer-vim`
 - [Vundle](https://github.com/gmarik/vundle)
-  - Add `Bundle 'https://github.com/paulfchristiano/dwimmer'` to .vimrc
+  - Add `Bundle 'https://github.com/paulfchristiano/dwimmer-vim'` to .vimrc
   - Run `:BundleInstall`
 - [NeoBundle](https://github.com/Shougo/neobundle.vim)
-  - Add `NeoBundle 'https://github.com/paulfchristiano/dwimmer'` to .vimrc
+  - Add `NeoBundle 'https://github.com/paulfchristiano/dwimmer-vim'` to .vimrc
   - Run `:NeoBundleInstall`
 - [vim-plug](https://github.com/junegunn/vim-plug)
-  - Add `Plug 'https://github.com/paulfchristiano/dwimmer'` to .vimrc
+  - Add `Plug 'https://github.com/paulfchristiano/dwimmer-vim'` to .vimrc
   - Run `:PlugInstall`
