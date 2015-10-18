@@ -1,6 +1,6 @@
-# dwimmer-vim
+# vim-dwimmer
 
-Vim support for [dwimmer-py](https://github.com/paulfchristiano/py-dwimmer).
+Vim support for [pydwimmer](https://github.com/paulfchristiano/py-dwimmer).
 That repository should be in a folder on your PYTHONPATH.
 
 The command ":Run f(x, y, z)" calls the function f(x, y, z) with py-dwimmer.
@@ -11,20 +11,20 @@ it should open the appropriate file and generate a stub which you need to fill i
 (This will probably only work if the file in question is in your current directory,
 and if the template is define somewhere on your vim path.)
 
-This is most likely to work for files in the dwimmer-py repository.
+This is most likely to work for files in the pydwimmer repository.
 
 ## Installation
 
 Use your plugin manager of choice.
 
 - [Pathogen](https://github.com/tpope/vim-pathogen)
-  - `git clone https://github.com/paulfchristiano/dwimmer-vim ~/.vim/bundle/dwimmer-vim`
+  - `git clone https://github.com/paulfchristiano/vim-dwimmer ~/.vim/bundle/vim-dwimmer`
 - [Vundle](https://github.com/gmarik/vundle)
-  - Add `Bundle 'https://github.com/paulfchristiano/dwimmer-vim'` to .vimrc
+  - Add `Bundle 'https://github.com/paulfchristiano/vim-dwimmer'` to .vimrc
   - Run `:BundleInstall`
 - [NeoBundle](https://github.com/Shougo/neobundle.vim)
-  - Add `NeoBundle 'https://github.com/paulfchristiano/dwimmer-vim'` to .vimrc
+  - Add `NeoBundle 'https://github.com/paulfchristiano/vim-dwimmer'` to .vimrc
   - Run `:NeoBundleInstall`
 - [vim-plug](https://github.com/junegunn/vim-plug)
-  - Add `Plug 'https://github.com/paulfchristiano/dwimmer-vim'` to .vimrc
+  - Add `Plug 'https://github.com/paulfchristiano/vim-dwimmer'` to .vimrc
   - Run `:PlugInstall`
