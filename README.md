@@ -1,17 +1,17 @@
 # vim-dwimmer
 
 Vim support for [pydwimmer](https://github.com/paulfchristiano/py-dwimmer).
-That repository should be in a folder on your PYTHONPATH.
+pydwimmer should be in a folder on your PYTHONPATH.
 
 The command ":Run f(x, y, z)" calls the function f(x, y, z) with py-dwimmer.
 The scope is the global scope in the file main.py in the current directory.
 
 If you run a command that encounters a novel state,
 it should open the appropriate file and generate a stub which you need to fill in.
-(This will probably only work if the file in question is in your current directory,
-and if the template is define somewhere on your vim path.)
+For now, this will only work if that file is in your current directory,
+and the template is defined in the current directory.
 
-This is most likely to work for files in the pydwimmer repository.
+The plugin is most likely to work for files in the pydwimmer repository.
 
 ## Installation
 
