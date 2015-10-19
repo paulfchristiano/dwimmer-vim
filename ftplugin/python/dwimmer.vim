@@ -1,5 +1,7 @@
 if exists('*Run')
-    finish
+    if @% != "dwimmer.vim"
+        finish
+    endif
 endif
 
 " --------------------------------
@@ -18,7 +20,9 @@ python << endOfPython
 
 try:
     import pydwimmer.plugin as dwimmer
-    dwimmer.run(vim.eval("a:input"))
+    x = dwimmer.run(vim.eval("a:input"))
+    if x is not None:
+        print(x.full_repr())
 except Exception:
     import sys, traceback
     traceback.print_exc(file=sys.stdout)
