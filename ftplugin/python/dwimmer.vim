@@ -19,7 +19,7 @@ function! Run(input)
 python << endOfPython
 
 try:
-    import pydwimmer.plugin as dwimmer
+    import dwimmer
     x = dwimmer.run(vim.eval("a:input"))
     if x is not None:
         print(x.full_repr())
@@ -35,7 +35,7 @@ python << endOfPython
 
 
 try:
-    import pydwimmer.plugin as dwimmer
+    import dwimmer
     from pydwimmer.utilities import nostdout
     from IPython.lib import deepreload
     with nostdout():
@@ -47,8 +47,40 @@ except Exception:
 endOfPython
 endfunction
 
+function! Testfunc(findstart, base)
+
+    echom a:base
+
+    if a:findstart == 1
+        return 2
+    endif
+
+    return ["hi", "hello", "test"]
+
+endfunction
+
+function! NewSetting(id)
+python << endOfPython
+
+try:
+    import dwimmer
+    x = dwimmer.new_setting(vim.eval("a:id"))
+except Exception:
+    import sys, traceback
+    traceback.print_exc(file=sys.stdout)
+
+endOfPython
+endfunction
+
+
+
+
 " --------------------------------
 "  Expose our commands to the user
 " --------------------------------
 command! Reload call Reload()
 command! -nargs=1  Run call Run(<f-args>)
+command! -nargs=1 NewSetting call NewSetting(<f-args>)
+
+"set completeopt=longest,menuone
+"set omnifunc=Testfunc
