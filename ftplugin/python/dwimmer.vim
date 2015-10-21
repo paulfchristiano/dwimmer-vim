@@ -14,9 +14,16 @@ python sys.path.append(vim.eval('expand("<sfile>:h")'))
 " --------------------------------
 "  Function(s)
 " --------------------------------
+function! RunLast()
+    call Run(w:lastdwim)
+endfunction
+  
 function! Run(input)
+    let w:lastdwim = a:input
     call Reload()
 python << endOfPython
+
+last_input = vim.eval("a:input")
 
 try:
     import dwimmer
@@ -31,14 +38,15 @@ endOfPython
 endfunction
 
 function! Reload()
+    write
 python << endOfPython
 
 
 try:
     import dwimmer
-    from pydwimmer.utilities import nostdout
+    from pydwimmer.utilities import nostdout, noreloads
     from IPython.lib import deepreload
-    with nostdout():
+    with noreloads():
         deepreload.reload(dwimmer, exclude=['sys', 'os.path', '__builtin__', '__main__', 'ipdb', 'vim'])
 except Exception:
     import sys, traceback
@@ -54,8 +62,8 @@ function! Testfunc(findstart, base)
     if a:findstart == 1
         return 2
     endif
-
-    return ["hi", "hello", "test"]
+    return [{"word": a:base, "abbr": "(none)"}]
+    "return [{"word": a:base, "abbr": "(none)","info": "info1"}, {"word": "hi", "abbr": "the first option","info": "how does info display?"}, "hello", "test"]
 
 endfunction
 
@@ -105,19 +113,19 @@ python << endOfPython
 try:
     import dwimmer
     dwimmer.manipulate_cursor_block()
-except Exception:
+exhicept Exception:
     import sys, traceback
     traceback.print_exc(file=sys.stdout)
 
 endOfPython
 endfunction
 
-
 " --------------------------------
 "  Expose our commands to the user
 " --------------------------------
 command! Reload call Reload()
 command! -nargs=1  Run call Run(<f-args>)
+command! RunLast call RunLast()
 command! -nargs=1 NewSetting call NewSetting(<f-args>)
 command! MakeFunction call MakeFunction()
 command! MakeTemplate call MakeTemplate()
@@ -125,8 +133,14 @@ command! MakeTemplate call MakeTemplate()
 " TODO: replace these with plugs so that the user can rebind them
 inoremap <C-t> <Esc>:MakeTemplate<CR>
 nnoremap <C-t> <Esc>:MakeTemplate<CR>
-inoremap <C-f> <Esc>:MakeFunction<CR>
-nnoremap <C-f> <Esc>:MakeFunction<CR>
+nnoremap <C-f> <Esc>:MakeFunctions<CR>
 
-"set completeopt=longest,menuone
-"set omnifunc=Testfunc
+inoremap <C-d> <Esc>:RunLast<CR>
+nnoremap <C-d> :RunLast<CR>
+
+" TODO reactivate these and build autocomplete
+"set completefunc=Testfunc
+"inoremap <C-k> <C-x><C-u>
+
+"set updatetime=200
+"au CursorHoldI <buffer> call feedkeys("\<C-k>")

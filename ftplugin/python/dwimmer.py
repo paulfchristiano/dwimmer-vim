@@ -16,8 +16,13 @@ def run(s):
 
 def new_setting(template_id):
     template_id = int(template_id)
+    if template_id in compiler.locations:
+        filename, lineno, col, taken_names = compiler.locations[template_id]
+        vim.command("w")
+        vim.command("e {}".format(filename))
+        vim.current.window.cursor = (lineno, col)
+        return
     predecessor_id, last_id = intern.init_and_last(template_id)
-
     filename, lineno, col, taken_names = compiler.locations[predecessor_id]
     vim.command("w")
     vim.command("e {}".format(filename))
@@ -47,7 +52,7 @@ def set_aside(make_def):
     s, manipulate = manipulate_cursor_block()
     docstring, args = utilities.remove_bracketed(s)
     name, _ = add_def(docstring, vim.current.buffer, make_def, len(args))
-    manipulate("{}({})".format(name, ",".join(args)))
+    manipulate("{}({})".format(name, ", ".join(args)))
     ensure_import("pydwimmer.terms", vim.current.buffer)
     ensure_import("pydwimmer.compiler", vim.current.buffer)
 
