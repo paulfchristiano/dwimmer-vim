@@ -1,9 +1,12 @@
-import pydwimmer.main as main
-import pydwimmer.terms as terms
-import pydwimmer.compiler as compiler
-import pydwimmer.intern as intern
-import pydwimmer.utilities as utilities
+from pydwimmer import main
+from pydwimmer import terms
+from pydwimmer import compiler
+from pydwimmer import intern 
+from pydwimmer import utilities
+from pydwimmer.prediction import autocomplete
+
 import re
+import string
 
 with_vim = False
 try:
@@ -14,39 +17,59 @@ except: pass
 def run(s):
     return eval(s, main.__dict__)
 
-def new_setting(template_id):
-    template_id = int(template_id)
-    if template_id in compiler.locations:
-        filename, lineno, col, taken_names = compiler.locations[template_id]
-        vim.command("w")
-        vim.command("e {}".format(filename))
-        vim.current.window.cursor = (lineno, col)
-        return
-    predecessor_id, last_id = intern.init_and_last(template_id)
-    filename, lineno, col, taken_names = compiler.locations[predecessor_id]
+def in_dwim_context():
+    def outermost(line):
+        return line and line[0] not in " \t"
+    row, col = vim.current.window.cursor
+    buffer = vim.current.window.buffer
+    row = row - 1 #why do they use 1 indexing?
+    while row >= 0 and not outermost(buffer[row]):
+        row = row - 1
+    #at the end of the loop, row is the def statement
+    if row <= 0:
+        return False
+    if not starts_with("def", buffer[row]):
+        return False
+    row = row - 1
+    if not starts_with("@", buffer[row]):
+        return False
+    return is_substring("dwim", buffer[row])
+
+def starts_with(prefix, s):
+    return len(s) >= len(prefix) and s[:len(prefix)] == s[:len(prefix)]
+
+def is_substring(substring, s):
+    return string.find(s, substring) > 0
+
+def move_to(location):
+    save_and_open(location.filepath())
+    vim.current.window.cursor = (location.row, location.col)
+
+def save_and_open(filename):
     vim.command("w")
     vim.command("e {}".format(filename))
-    template_name, template_path, arg_names, _ = terms.templates[last_id]
-    for i in range(len(arg_names)):
-        arg = arg_names[i]
-        if arg in taken_names:
-            j = 2
-            while arg in taken_names:
-                arg = arg_names[i] + str(j)
-                j+=1
-        arg_names[i] = arg
-    template_file = template_path.split(".")[-1]
-    if template_file != filename:
-        lineno += ensure_import(template_path, vim.current.buffer)
-    vim.current.buffer[lineno:lineno] = [
-        "{}with {}({}):".format( " " * col, 
-            template_name 
-            if template_file == filename 
-            else "{}.{}".format(template_path, template_name),
-            ", ".join(arg_names)
-        )
+
+def new_setting(template_id):
+    template_id = int(template_id)
+    if template_id in compiler.setting_definitions:
+        setting_def = compiler.setting_definitions[template_id]
+        move_to(setting_def.loc)
+        return
+    predecessor_id, last_id = intern.init_and_last(template_id)
+    setting_def = compiler.setting_definitions[predecessor_id]
+    move_to(setting_def.loc)
+    template_def = terms.template_definitions[last_id]
+    arg_names = [setting_def.unique_name(arg) for arg in template_def.args]
+    line, col = setting_def.loc.cursor()
+    if template_def.loc.filename() == setting_def.loc.filename():
+        qualified_name = template_def.name
+    else:
+        qualified_name = template_def.python_ref()
+        line += ensure_import(template_def.loc.python_ref(), vim.current.buffer)
+    vim.current.buffer[line:line] = [
+        "{}with {}({}):".format( " " * col, qualified_name, ", ".join(arg_names))
     ]
-    vim.current.window.cursor = (lineno+1, col)
+    vim.current.window.cursor = (line+1, col)
 
 def set_aside(make_def):
     s, manipulate = manipulate_cursor_block()
@@ -92,7 +115,10 @@ def extract_name_and_args(s):
     m = re.match("([a-zA-Z0-9_].*)\((.*)\)", s)
     if m is not None:
         name = m.group(1)
-        args = m.group(2).split(',')
+        if m.group(2).strip() == "":
+            args = []
+        else:
+            args = m.group(2).split(',')
         return m.group(1), [arg.strip() for arg in args]
     else:
         return s, []
@@ -108,15 +134,22 @@ def ensure_import(name, buffer):
     buffer[:0] = ["import {}".format(name)]
     return 1
 
+def manipulate_block(line, col):
+    left, right = get_endpoints(line, col)
+    def new_line(s):
+        return line[:left] + s + line[right+1:]
+    return line[left:right+1], new_line
+
+
 def manipulate_cursor_block():
     row, col = vim.current.window.cursor
     line = vim.current.line
-    left, right = get_endpoints(line, col)
+    snip, make_new = manipulate_block(line, col)
 
-    def make_new_line(s):
-        vim.current.buffer[row-1] = line[:left] + s + line[right+1:]
+    def manipulate(s):
+        vim.current.buffer[row-1] = make_new(s)
 
-    return line[left:right+1], make_new_line
+    return snip, manipulate
 
 def get_endpoints(line, col):
 
@@ -130,7 +163,7 @@ def get_endpoints(line, col):
     def only_whitespace(col, direction):
         if col < 0 or col >= len(line):
             return True
-        if line[col] != " ":
+        if line[col] not in " \t":
             return False
         return only_whitespace(col+direction, direction)
 
@@ -152,3 +185,30 @@ def get_endpoints(line, col):
         return end_position(next, direction, depth)
 
     return end_position(col, -1), end_position(col, 1)
+
+autocomplete.build_index()
+
+def get_autocompletion_base():
+    _, col = vim.current.window.cursor
+    line = vim.current.line
+    line = line[:col] + " " + line[col:]
+    result = get_endpoints(line, col)[0]
+    return result, result < col
+
+def get_autocompletions(n):
+    text, _ = manipulate_cursor_block()
+    head, args = utilities.remove_bracketed(text)
+    print(head)
+    print(autocomplete.best_matches(head, n))
+    return [autocomplete_entry_for_template(template, args) 
+            for template in autocomplete.best_matches(head, n)]
+    
+def autocomplete_entry_for_template(template, args):
+    defn = terms.template_definitions[template.id]
+    print(defn.args)
+    print(template)
+    return {
+            "word": "{}({})".format(defn.python_ref(), ", ".join(args)),
+            "abbr": str(template),
+            "info": template.show_with(defn.args)
+        }
