@@ -1,3 +1,7 @@
+
+set updatetime=200
+au CursorHoldI <buffer> call AutoCompleteInDwimContext()
+
 if exists('*Run')
     if @% != "dwimmer.vim"
         finish
@@ -156,13 +160,10 @@ python << endOfPython
 try:
     if dwimmer.in_dwim_context():
         vim.command('call feedkeys("\<C-x>\<C-u>")')
+
 except Exception:
     import sys, traceback
     traceback.print_exc(file=sys.stdout)
 
 endOfPython
 endfunction
-
-set updatetime=200
-au CursorHoldI <buffer> call AutoCompleteInDwimContext()
-
