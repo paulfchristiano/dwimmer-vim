@@ -161,13 +161,20 @@ def get_endpoints(line, col):
         return ends(symbol, -direction)
 
     def only_whitespace(col, direction):
-        if col < 0 or col >= len(line):
+        if (col < 0 and direction < 0) or (col >= len(line) and direction > 0):
             return True
-        if line[col] not in " \t":
-            return False
+        if (col >= 0 and col < len(line)):
+            if line[col] not in " \t":
+                return False
         return only_whitespace(col+direction, direction)
 
     def stop(col, direction, depth):
+        if direction < 0 and col < len(line) and only_keyword(line[:col+1]):
+            return True
+        if col >= len(line):
+            return direction > 0
+        if col < 0:
+            return direction < 0
         if only_whitespace(col, direction):
             return True
         if ends(line[col], direction) and depth == 0:
@@ -175,16 +182,20 @@ def get_endpoints(line, col):
 
     def end_position(col, direction, depth = 0):
         next = col+direction
-        if starts(line[col], direction):
-            depth+=1
-        elif ends(line[col], direction):
-            if depth > 0:
-                depth-=1
+        if col < len(line):
+            if starts(line[col], direction):
+                depth+=1
+            elif ends(line[col], direction):
+                if depth > 0:
+                    depth-=1
         if stop(next, direction, depth):
             return col
         return end_position(next, direction, depth)
 
     return end_position(col, -1), end_position(col, 1)
+
+def only_keyword(s):
+    return s.strip() in ["raise", "return", "if", "with"]
 
 autocomplete.build_index()
 
@@ -195,10 +206,12 @@ def get_autocompletion_base():
     result = get_endpoints(line, col)[0]
     return result, result < col
 
-def get_autocompletions(n):
-    text, _ = manipulate_cursor_block()
+def get_autocompletions(n, base):
+    line = vim.current.line
+    row, col = vim.current.window.cursor
+    line = line[:col] + base + line[col:]
+    text, _ = manipulate_block(line, col)
     head, args = utilities.remove_bracketed(text)
-    print(head)
     print(autocomplete.best_matches(head, n))
     return [autocomplete_entry_for_template(template, args) 
             for template in autocomplete.best_matches(head, n)]

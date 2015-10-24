@@ -59,6 +59,7 @@ python << endOfPython
 try:
     if vim.eval("a:findstart") in [1, "1"]:
         result, shouldComplete = dwimmer.get_autocompletion_base()
+        print(result)
         if not shouldComplete:
             vim.command("return -3")
         else:
@@ -68,15 +69,12 @@ try:
         if base == "":
             vim.command("return []")
         else:
-            autocompletions = [base, 'hi', 'hey', {'word': 'test'}]
-            autocompletions = [base] + dwimmer.get_autocompletions(5)
-            print("return {}".format(autocompletions))
-            #vim.command("return {}".format(autocompletions))
-            #vim.command("return ['plus']")
-            vim.command("return ['plus', {'info': 'two times x plus one', 'word': 'pydwimmer.builtin.ints.double_inc()', 'abbr': 'two times {} plus one'}, {'info': 'what is x plus y?', 'word': 'pydwimmer.builtin.ints.add()', 'abbr': 'what is {} plus {}?'}]")
+            autocompletions = [base] + dwimmer.get_autocompletions(5, base)
+            vim.command("return {}".format(autocompletions))
 except Exception:
     import sys, traceback
     traceback.print_exc(file=sys.stdout)
+    raise
 
 endOfPython
 endfunction
@@ -140,7 +138,7 @@ command! -nargs=1 NewSetting call NewSetting(<f-args>)
 command! MakeFunction call MakeFunction()
 command! MakeTemplate call MakeTemplate()
 command! Test call Testfunc(0, "plus")
-command! IDC call InDwimContext()
+command! Base call Testfunc(1, "")
 
 " TODO: replace these with plugs so that the user can rebind them
 inoremap <C-t> <Esc>:MakeTemplate<CR>
