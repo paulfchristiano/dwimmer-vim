@@ -217,6 +217,8 @@ def get_autocompletions(n, base):
             for template in autocomplete.best_matches(head, n)]
     
 def autocomplete_entry_for_template(template, args):
+    if template not in terms.all_templates:
+        raise ValueError("what happened?")
     defn = terms.template_definitions[template.id]
     print(defn.args)
     print(template)
